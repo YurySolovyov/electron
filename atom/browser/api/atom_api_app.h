@@ -11,6 +11,7 @@
 #include "atom/browser/api/event_emitter.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/browser_observer.h"
+#include "atom/common/api/atom_api_native_image.h"
 #include "atom/common/native_mate_converters/callback.h"
 #include "chrome/browser/icon_loader.h"
 #include "chrome/browser/process_singleton.h"
@@ -43,7 +44,7 @@ class App : public AtomBrowserClient::Delegate,
             public BrowserObserver,
             public content::GpuDataManagerObserver {
  public:
-  using FileIconCallback = base::Callback<void(const gfx::Image&)>;
+  using FileIconCallback = base::Callback<void(v8::Local<v8::Value>, mate::Handle<NativeImage>)>;
 
   static mate::Handle<App> Create(v8::Isolate* isolate);
 
