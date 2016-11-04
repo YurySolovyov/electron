@@ -323,7 +323,7 @@ namespace api {
 
 namespace {
 
-IconLoader::IconSize GetIconSizeByString(std::string size) {
+IconLoader::IconSize GetIconSizeByString(const std::string& size) {
   if (size == "small") {
     return IconLoader::IconSize::SMALL;
   } else if (size == "large") {
@@ -824,7 +824,7 @@ JumpListResult App::SetJumpList(v8::Local<v8::Value> val,
 
 void App::GetFileIcon(const base::FilePath& path,
                       mate::Arguments* args) {
-  base::DictionaryValue options;
+  mate::Dictionary options;
   IconLoader::IconSize icon_size;
   FileIconCallback callback;
 
@@ -832,7 +832,7 @@ void App::GetFileIcon(const base::FilePath& path,
     icon_size = IconLoader::IconSize::NORMAL;
   } else {
     std::string icon_size_string;
-    options.GetString("size", &icon_size_string);
+    options.Get("size", &icon_size_string);
     icon_size = GetIconSizeByString(icon_size_string);
   }
 
