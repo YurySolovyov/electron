@@ -450,14 +450,14 @@ int ImportIntoCertStore(
 void OnIconDataAvailable(const App::FileIconCallback& callback,
                          gfx::Image* icon) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  if (icon) {
-    callback.Run(v8::Null(isolate), NativeImage::Create(isolate, *icon));
+  if (icon && !icon->IsEmpty()) {
+    v8::Locker locker(isolate);
+    v8::HandleScope handle_scope(isolate);
+    callback.Run(v8::Null(isolate), *icon);
   } else {
     v8::Local<v8::String> error_message =
-      v8::String::NewFromUtf8(isolate,
-                              "Failed to get file icon. Make sure path exists");
-    callback.Run(v8::Exception::Error(error_message),
-                 NativeImage::CreateEmpty(isolate));
+      v8::String::NewFromUtf8(isolate, "Failed to get file icon.");
+    callback.Run(v8::Exception::Error(error_message), gfx::Image());
   }
 }
 
@@ -854,7 +854,9 @@ void App::GetFileIcon(const base::FilePath& path,
   gfx::Image* icon = icon_manager->LookupIconFromFilepath(path, icon_size);
   if (icon) {
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
-    callback.Run(v8::Undefined(isolate), NativeImage::Create(isolate, *icon));
+    v8::Locker locker(isolate);
+    v8::HandleScope handle_scope(isolate);
+    callback.Run(v8::Null(isolate), *icon);
   } else {
     icon_manager->LoadIcon(path, icon_size,
                            base::Bind(&OnIconDataAvailable, callback));
