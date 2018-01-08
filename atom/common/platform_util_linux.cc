@@ -12,6 +12,9 @@
 #include "base/nix/xdg_util.h"
 #include "base/process/kill.h"
 #include "base/process/launch.h"
+#include "base/task_scheduler/post_task.h"
+#include "base/task_scheduler/task_traits.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "url/gurl.h"
 
 #define ELECTRON_TRASH "ELECTRON_TRASH"
@@ -135,6 +138,26 @@ bool MoveItemToTrash(const base::FilePath& full_path) {
     argv.push_back(full_path.value());
   }
   return XDGUtilV(argv, true);
+}
+
+void TrashCaller(const base::FilePath& full_path,
+                 const MoveItemToTrashCallback& callback) {
+  callback.Run(MoveItemToTrash(full_path));
+}
+
+void MoveItemToTrash(const base::FilePath& full_path,
+                     const MoveItemToTrashCallback& callback) {
+  // scoped_refptr<base::SequencedTaskRunner> runner =
+  //                 base::CreateSequencedTaskRunnerWithTraits({base::MayBlock()});
+  // runner->PostTask(FROM_HERE,
+  //                  base::BindOnce(&TrashCaller, full_path, callback));
+
+  // base::PostTaskWithTraits(
+  //   FROM_HERE, {base::TaskPriority::USER_BLOCKING, base::MayBlock()},
+  //   base::BindOnce(&TrashCaller, full_path, callback));
+
+  base::ThreadTaskRunnerHandle::Get()->
+    PostTask(FROM_HERE, base::BindOnce(&TrashCaller, full_path, callback));
 }
 
 void Beep() {

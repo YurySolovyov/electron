@@ -80,6 +80,20 @@ bool OpenExternal(
   return platform_util::OpenExternal(url, activate);
 }
 
+bool MoveItemToTrash(const base::FilePath& url,
+                     mate::Arguments* args) {
+    bool success = true;
+    if (args->Length() == 1) { //sync
+      return platform_util::MoveItemToTrash(url);
+    } else if (args->Length() == 2) { // async
+      base::Callback<void(const bool)> callback;
+      if (args->GetNext(&callback)) {
+        platform_util::MoveItemToTrash(url, callback);
+      }
+    }
+    return success;
+}
+
 #if defined(OS_WIN)
 bool WriteShortcutLink(const base::FilePath& shortcut_path,
                        mate::Arguments* args) {
@@ -141,7 +155,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   dict.SetMethod("showItemInFolder", &platform_util::ShowItemInFolder);
   dict.SetMethod("openItem", &platform_util::OpenItem);
   dict.SetMethod("openExternal", &OpenExternal);
-  dict.SetMethod("moveItemToTrash", &platform_util::MoveItemToTrash);
+  dict.SetMethod("moveItemToTrash", &MoveItemToTrash);
   dict.SetMethod("beep", &platform_util::Beep);
 #if defined(OS_WIN)
   dict.SetMethod("writeShortcutLink", &WriteShortcutLink);
