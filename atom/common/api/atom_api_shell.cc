@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <string>
+#include <stdio.h>
 
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
@@ -80,6 +81,14 @@ bool OpenExternal(
   return platform_util::OpenExternal(url, activate);
 }
 
+void OnRemoved(bool result) {
+  if (result) {
+    printf("Yay!");
+  } else {
+    printf("Nay...");
+  }
+}
+
 bool MoveItemToTrash(const base::FilePath& url,
                      mate::Arguments* args) {
     bool success = true;
@@ -88,7 +97,7 @@ bool MoveItemToTrash(const base::FilePath& url,
     } else if (args->Length() == 2) { // async
       base::Callback<void(const bool)> callback;
       if (args->GetNext(&callback)) {
-        platform_util::MoveItemToTrash(url, callback);
+        platform_util::MoveItemToTrashAsync(url, base::Bind(&OnRemoved));
       }
     }
     return success;

@@ -57,8 +57,8 @@ void OpenExternal(
 bool MoveItemToTrash(const base::FilePath& full_path);
 
 // Async move a file to trash.
-void MoveItemToTrash(const base::FilePath& full_path,
-                     const MoveItemToTrashCallback& callback);
+void MoveItemToTrashAsync(const base::FilePath& full_path,
+                          const MoveItemToTrashCallback& callback);
 
 void Beep();
 

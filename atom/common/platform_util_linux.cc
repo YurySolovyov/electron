@@ -142,22 +142,26 @@ bool MoveItemToTrash(const base::FilePath& full_path) {
 
 void TrashCaller(const base::FilePath& full_path,
                  const MoveItemToTrashCallback& callback) {
-  callback.Run(MoveItemToTrash(full_path));
+  printf("%s\n", "Before");
+  bool result = MoveItemToTrash(full_path);
+  printf("%s\n", "After");
+  callback.Run(result);
+  printf("%s\n", "Exit");
 }
 
-void MoveItemToTrash(const base::FilePath& full_path,
+void MoveItemToTrashAsync(const base::FilePath& full_path,
                      const MoveItemToTrashCallback& callback) {
   // scoped_refptr<base::SequencedTaskRunner> runner =
   //                 base::CreateSequencedTaskRunnerWithTraits({base::MayBlock()});
   // runner->PostTask(FROM_HERE,
   //                  base::BindOnce(&TrashCaller, full_path, callback));
 
-  // base::PostTaskWithTraits(
-  //   FROM_HERE, {base::TaskPriority::USER_BLOCKING, base::MayBlock()},
-  //   base::BindOnce(&TrashCaller, full_path, callback));
+  base::PostTaskWithTraits(
+    FROM_HERE, {base::TaskPriority::USER_BLOCKING, base::MayBlock()},
+    base::BindOnce(&TrashCaller, full_path, callback));
 
-  base::ThreadTaskRunnerHandle::Get()->
-    PostTask(FROM_HERE, base::BindOnce(&TrashCaller, full_path, callback));
+  // base::ThreadTaskRunnerHandle::Get()->
+  //   PostTask(FROM_HERE, base::BindOnce(&TrashCaller, full_path, callback));
 }
 
 void Beep() {
