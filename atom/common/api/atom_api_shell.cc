@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <string>
-#include <stdio.h>
 
 #include "atom/common/native_mate_converters/callback.h"
 #include "atom/common/native_mate_converters/file_path_converter.h"
