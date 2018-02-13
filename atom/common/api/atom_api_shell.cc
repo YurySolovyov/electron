@@ -89,7 +89,6 @@ bool MoveItemToTrash(const base::FilePath& url,
     } else if (args->Length() == 2) { // async
       base::Callback<void(const bool)> callback;
       if (args->GetNext(&callback)) {
-        // platform_util::MoveItemToTrashAsync(url, base::Bind(&OnRemoved, callback));
         platform_util::MoveItemToTrashAsync(url, callback);
       }
     }
