@@ -140,28 +140,18 @@ bool MoveItemToTrash(const base::FilePath& full_path) {
   return XDGUtilV(argv, true);
 }
 
-void TrashCaller(const base::FilePath& full_path,
-                 const MoveItemToTrashCallback callback) {
-  printf("%s\n", "Before");
-  bool result = MoveItemToTrash(full_path);
-  printf("%s\n", result ? "Removed" : "Failed");
-  callback.Run();
-  printf("%s\n", "Exit");
+void OnTrashComplete(const MoveItemToTrashCallback& callback,
+                     const bool result) {
+  callback.Run(result);
 }
 
 void MoveItemToTrashAsync(const base::FilePath& full_path,
-                          const MoveItemToTrashCallback callback) {
-  // scoped_refptr<base::SequencedTaskRunner> runner =
-  //                 base::CreateSequencedTaskRunnerWithTraits({base::MayBlock()});
-  // runner->PostTask(FROM_HERE,
-  //                  base::BindOnce(&TrashCaller, full_path, callback));
-
-  base::PostTaskWithTraits(
-    FROM_HERE, {base::TaskPriority::USER_BLOCKING, base::MayBlock()},
-    base::BindOnce(&TrashCaller, full_path, callback));
-
-  // base::ThreadTaskRunnerHandle::Get()->
-  //   PostTask(FROM_HERE, base::BindOnce(&TrashCaller, full_path, callback));
+                          const MoveItemToTrashCallback& callback) {
+  base::PostTaskWithTraitsAndReplyWithResult(
+    FROM_HERE,
+    {base::TaskPriority::USER_VISIBLE, base::MayBlock()},
+    base::BindOnce(&MoveItemToTrash, full_path),
+    base::BindOnce(&OnTrashComplete, callback));
 }
 
 void Beep() {

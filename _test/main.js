@@ -6,10 +6,10 @@ const path = require('path');
 var count = 0;
 setInterval(() => {
   console.log(count++);
-  if (count === 10) {
+  if (count === 100) {
     app.quit();
   }
-}, 20);
+}, 50);
 
 app.on('ready', function() {
   const filepath = path.join(__dirname, 'test.md');

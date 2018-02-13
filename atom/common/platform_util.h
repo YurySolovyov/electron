@@ -23,7 +23,7 @@ class FilePath;
 namespace platform_util {
 
 typedef base::Callback<void(const std::string&)> OpenExternalCallback;
-typedef base::Callback<void()> MoveItemToTrashCallback;
+typedef base::Callback<void(const bool)> MoveItemToTrashCallback;
 
 // Show the given file in a file manager. If possible, select the file.
 // Must be called from the UI thread.
@@ -58,7 +58,7 @@ bool MoveItemToTrash(const base::FilePath& full_path);
 
 // Async move a file to trash.
 void MoveItemToTrashAsync(const base::FilePath& full_path,
-                          const MoveItemToTrashCallback callback);
+                          const MoveItemToTrashCallback& callback);
 
 void Beep();
 
