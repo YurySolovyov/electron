@@ -79,4 +79,28 @@ describe('shell module', () => {
       assert.deepEqual(shell.readShortcutLink(tmpShortcut), change)
     })
   })
+
+  describe('shell.moveItemToTrash', () => {
+    const filePath = path.join(os.tmpdir(), `${Date.now()}.md`)
+
+    beforeEach(() => {
+      fs.writeFileSync(filePath, '# Hello')
+    })
+
+    it('moves file to trash synchronously if no callback given', () => {
+      assert.equal(fs.existsSync(filePath), true)
+
+      const result = shell.moveItemToTrash(filePath)
+      assert.equal(result, true)
+      assert.equal(fs.existsSync(filePath), false)
+    })
+
+    it('moves file to trash asynchronously when callback is given', () => {
+      shell.moveItemToTrash(filePath, success => {
+        assert.equal(success, true)
+        assert.equal(fs.existsSync(filePath), false)
+      })
+      assert.equal(fs.existsSync(filePath), true)
+    })
+  })
 })
