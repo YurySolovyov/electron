@@ -81,23 +81,16 @@ bool OpenExternal(
   return platform_util::OpenExternal(url, activate);
 }
 
-void OnRemoved(bool result) {
-  if (result) {
-    printf("Yay!");
-  } else {
-    printf("Nay...");
-  }
-}
-
 bool MoveItemToTrash(const base::FilePath& url,
                      mate::Arguments* args) {
     bool success = true;
     if (args->Length() == 1) { //sync
       return platform_util::MoveItemToTrash(url);
     } else if (args->Length() == 2) { // async
-      base::Callback<void(const bool)> callback;
+      base::Callback<void()> callback;
       if (args->GetNext(&callback)) {
-        platform_util::MoveItemToTrashAsync(url, base::Bind(&OnRemoved));
+        // platform_util::MoveItemToTrashAsync(url, base::Bind(&OnRemoved, callback));
+        platform_util::MoveItemToTrashAsync(url, callback);
       }
     }
     return success;

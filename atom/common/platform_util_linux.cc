@@ -141,16 +141,16 @@ bool MoveItemToTrash(const base::FilePath& full_path) {
 }
 
 void TrashCaller(const base::FilePath& full_path,
-                 const MoveItemToTrashCallback& callback) {
+                 const MoveItemToTrashCallback callback) {
   printf("%s\n", "Before");
   bool result = MoveItemToTrash(full_path);
-  printf("%s\n", "After");
-  callback.Run(result);
+  printf("%s\n", result ? "Removed" : "Failed");
+  callback.Run();
   printf("%s\n", "Exit");
 }
 
 void MoveItemToTrashAsync(const base::FilePath& full_path,
-                     const MoveItemToTrashCallback& callback) {
+                          const MoveItemToTrashCallback callback) {
   // scoped_refptr<base::SequencedTaskRunner> runner =
   //                 base::CreateSequencedTaskRunnerWithTraits({base::MayBlock()});
   // runner->PostTask(FROM_HERE,
