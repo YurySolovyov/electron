@@ -94,6 +94,14 @@ bool MoveItemToTrash(const base::FilePath& url,
     return success;
 }
 
+// void TestPromise(mate::Arguments* args) {
+//   v8::Isolate* isolate = args->isolate();
+//   auto resolver = v8::Promise::Resolver::New(isolate);
+//   v8::Local<v8::Object> promise = resolver->GetPromise();
+//   args->Return(promise);
+//   resolver->Resolve(v8::String::NewFromUtf8(isolate, "value"));
+// }
+
 #if defined(OS_WIN)
 bool WriteShortcutLink(const base::FilePath& shortcut_path,
                        mate::Arguments* args) {
