@@ -100,7 +100,7 @@ void OpenExternal(const GURL& url, bool activate,
   callback.Run(OpenExternal(url, activate) ? "" : "Failed to open");
 }
 
-bool MoveItemToTrash(const base::FilePath& full_path) {
+bool MoveItemToTrashSync(const base::FilePath& full_path) {
   std::string trash;
   if (getenv(ELECTRON_TRASH) != NULL) {
     trash = getenv(ELECTRON_TRASH);
@@ -142,15 +142,16 @@ bool MoveItemToTrash(const base::FilePath& full_path) {
 
 void OnTrashComplete(const MoveItemToTrashCallback& callback,
                      const bool result) {
+  // TODO: this might be redundant
   callback.Run(result);
 }
 
-void MoveItemToTrashAsync(const base::FilePath& full_path,
-                          const MoveItemToTrashCallback& callback) {
+void MoveItemToTrash(const base::FilePath& full_path,
+                     const MoveItemToTrashCallback& callback) {
   base::PostTaskWithTraitsAndReplyWithResult(
     FROM_HERE,
     {base::TaskPriority::USER_VISIBLE, base::MayBlock()},
-    base::BindOnce(&MoveItemToTrash, full_path),
+    base::BindOnce(&MoveItemToTrashSync, full_path),
     base::BindOnce(&OnTrashComplete, callback));
 }
 

@@ -80,27 +80,36 @@ bool OpenExternal(
   return platform_util::OpenExternal(url, activate);
 }
 
-bool MoveItemToTrash(const base::FilePath& url,
-                     mate::Arguments* args) {
-    bool success = true;
-    if (args->Length() == 1) { //sync
-      return platform_util::MoveItemToTrash(url);
-    } else if (args->Length() == 2) { // async
-      base::Callback<void(const bool)> callback;
-      if (args->GetNext(&callback)) {
-        platform_util::MoveItemToTrashAsync(url, callback);
-      }
-    }
-    return success;
+void OnMoveItemToTrashFinished(v8::Isolate* isolate,
+                               v8::Local<v8::Promise::Resolver> resolver,
+                               const bool result) {
+  v8::HandleScope handle_scope(isolate);
+
+  if (result) {
+    printf("SUCCESS");
+    resolver->Resolve(v8::Undefined(isolate));
+  } else {
+    printf("FAIL");
+    v8::Local<v8::String> error_message = v8::String::NewFromUtf8(isolate, "Failed");
+    resolver->Reject(v8::Exception::Error(error_message));
+  }
 }
 
-// void TestPromise(mate::Arguments* args) {
-//   v8::Isolate* isolate = args->isolate();
-//   auto resolver = v8::Promise::Resolver::New(isolate);
-//   v8::Local<v8::Object> promise = resolver->GetPromise();
-//   args->Return(promise);
-//   resolver->Resolve(v8::String::NewFromUtf8(isolate, "value"));
-// }
+void MoveItemToTrash(const base::FilePath& url,
+                     mate::Arguments* args) {
+    v8::Isolate* isolate = args->isolate();
+
+    v8::HandleScope handle_scope(isolate);
+
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    auto resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
+    // TODO: fix this in native_mate_converters
+    v8::Local<v8::Object> promise = resolver->GetPromise();
+    args->Return(promise);
+
+    auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
+    platform_util::MoveItemToTrash(url, callback);
+}
 
 #if defined(OS_WIN)
 bool WriteShortcutLink(const base::FilePath& shortcut_path,
@@ -164,6 +173,7 @@ void Initialize(v8::Local<v8::Object> exports, v8::Local<v8::Value> unused,
   dict.SetMethod("openItem", &platform_util::OpenItem);
   dict.SetMethod("openExternal", &OpenExternal);
   dict.SetMethod("moveItemToTrash", &MoveItemToTrash);
+  dict.SetMethod("moveItemToTrashSync", &platform_util::MoveItemToTrashSync);
   dict.SetMethod("beep", &platform_util::Beep);
 #if defined(OS_WIN)
   dict.SetMethod("writeShortcutLink", &WriteShortcutLink);
