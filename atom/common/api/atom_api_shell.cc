@@ -80,22 +80,21 @@ bool OpenExternal(
   return platform_util::OpenExternal(url, activate);
 }
 
+typedef v8::Persistent<v8::Promise::Resolver, v8::CopyablePersistentTraits<v8::Promise::Resolver>> CopyablePromiseResolver;
 void OnMoveItemToTrashFinished(v8::Isolate* isolate,
-                               v8::Persistent<v8::Promise::Resolver, v8::CopyablePersistentTraits<v8::Promise::Resolver>> resolver,
+                               CopyablePromiseResolver resolver,
                                const bool result) {
   v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  auto local = v8::Local<v8::Promise::Resolver>::New(isolate, resolver);
-
   if (result) {
-    printf("SUCCESS");
-    local->Resolve(v8::Null(isolate));
+    resolver.Get(isolate)->Resolve(v8::Null(isolate));
   } else {
-    printf("FAIL");
     v8::Local<v8::String> error_message = v8::String::NewFromUtf8(isolate, "Failed");
-    local->Reject(v8::Exception::Error(error_message));
+    resolver.Get(isolate)->Reject(v8::Exception::Error(error_message));
   }
+
+  resolver.SetWeak();
 }
 
 void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
@@ -104,13 +103,12 @@ void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
     v8::Locker locker(isolate);
     v8::HandleScope handle_scope(isolate);
 
-    auto resolver = v8::Promise::Resolver::New(isolate);
-    args->Return(resolver->GetPromise().As<v8::Object>());
+    CopyablePromiseResolver resolver;
+    resolver.Reset(isolate, v8::Promise::Resolver::New(isolate));
 
-    v8::Persistent<v8::Promise::Resolver, v8::CopyablePersistentTraits<v8::Promise::Resolver>> persistent_resolver;
-    persistent_resolver.Reset(isolate, resolver);
+    args->Return(resolver.Get(isolate)->GetPromise().As<v8::Object>());
 
-    auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, persistent_resolver);
+    auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
     platform_util::MoveItemToTrash(url, callback);
 }
 
