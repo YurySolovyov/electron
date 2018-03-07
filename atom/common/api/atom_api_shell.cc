@@ -83,11 +83,12 @@ bool OpenExternal(
 void OnMoveItemToTrashFinished(v8::Isolate* isolate,
                                v8::Local<v8::Promise::Resolver> resolver,
                                const bool result) {
+  v8::Locker locker(isolate);
   v8::HandleScope handle_scope(isolate);
 
   if (result) {
     printf("SUCCESS");
-    resolver->Resolve(v8::Undefined(isolate));
+    resolver->Resolve(v8::Null(isolate));
   } else {
     printf("FAIL");
     v8::Local<v8::String> error_message = v8::String::NewFromUtf8(isolate, "Failed");
@@ -95,17 +96,14 @@ void OnMoveItemToTrashFinished(v8::Isolate* isolate,
   }
 }
 
-void MoveItemToTrash(const base::FilePath& url,
-                     mate::Arguments* args) {
+void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
     v8::Isolate* isolate = args->isolate();
 
+    v8::Locker locker(isolate);
     v8::HandleScope handle_scope(isolate);
 
-    v8::Local<v8::Context> context = isolate->GetCurrentContext();
-    auto resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
-    // TODO: fix this in native_mate_converters
-    v8::Local<v8::Object> promise = resolver->GetPromise();
-    args->Return(promise);
+    auto resolver = v8::Promise::Resolver::New(isolate);
+    args->Return(resolver->GetPromise().As<v8::Object>());
 
     auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
     platform_util::MoveItemToTrash(url, callback);
