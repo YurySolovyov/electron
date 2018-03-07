@@ -95,7 +95,7 @@ void OnMoveItemToTrashFinished(v8::Isolate* isolate,
     resolver.Get(isolate)->Reject(v8::Exception::Error(message));
   }
 
-  resolver.SetWeak();
+  resolver.Reset();
 }
 
 void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
