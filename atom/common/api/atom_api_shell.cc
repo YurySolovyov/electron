@@ -90,8 +90,9 @@ void OnMoveItemToTrashFinished(v8::Isolate* isolate,
   if (result) {
     resolver.Get(isolate)->Resolve(v8::Null(isolate));
   } else {
-    v8::Local<v8::String> error_message = v8::String::NewFromUtf8(isolate, "Failed");
-    resolver.Get(isolate)->Reject(v8::Exception::Error(error_message));
+    printf("Rejected");
+    auto message = mate::StringToV8(isolate, "Underlying command returned error message code");
+    resolver.Get(isolate)->Reject(v8::Exception::Error(message));
   }
 
   resolver.SetWeak();
@@ -106,7 +107,7 @@ void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
     CopyablePromiseResolver resolver;
     resolver.Reset(isolate, v8::Promise::Resolver::New(isolate));
 
-    args->Return(resolver.Get(isolate)->GetPromise().As<v8::Object>());
+    args->Return(resolver.Get(isolate)->GetPromise().As<v8::Value>());
 
     auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
     platform_util::MoveItemToTrash(url, callback);
