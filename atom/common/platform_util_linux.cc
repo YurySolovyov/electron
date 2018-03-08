@@ -141,12 +141,12 @@ bool MoveItemToTrashSync(const base::FilePath& full_path) {
 }
 
 void MoveItemToTrash(const base::FilePath& full_path,
-                     const MoveItemToTrashCallback& callback) {
+                     MoveItemToTrashCallback callback) {
   base::PostTaskWithTraitsAndReplyWithResult(
     FROM_HERE,
     {base::TaskPriority::USER_VISIBLE, base::MayBlock()},
-    base::Bind(&MoveItemToTrashSync, full_path), // task
-    callback                                     // reply
+    base::BindOnce(&MoveItemToTrashSync, full_path),
+    std::move(callback)
   );
 }
 

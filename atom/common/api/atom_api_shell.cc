@@ -109,8 +109,8 @@ void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
 
   args->Return(resolver.Get(isolate)->GetPromise().As<v8::Value>());
 
-  auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
-  platform_util::MoveItemToTrash(url, callback);
+  auto callback = base::BindOnce(&OnMoveItemToTrashFinished, isolate, resolver);
+  platform_util::MoveItemToTrash(url, std::move(callback));
 }
 
 #if defined(OS_WIN)
