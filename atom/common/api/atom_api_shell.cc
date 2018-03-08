@@ -99,18 +99,18 @@ void OnMoveItemToTrashFinished(v8::Isolate* isolate,
 }
 
 void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
-    v8::Isolate* isolate = args->isolate();
+  v8::Isolate* isolate = args->isolate();
 
-    v8::Locker locker(isolate);
-    v8::HandleScope handle_scope(isolate);
+  v8::Locker locker(isolate);
+  v8::HandleScope handle_scope(isolate);
 
-    CopyablePromiseResolver resolver;
-    resolver.Reset(isolate, v8::Promise::Resolver::New(isolate));
+  CopyablePromiseResolver resolver;
+  resolver.Reset(isolate, v8::Promise::Resolver::New(isolate));
 
-    args->Return(resolver.Get(isolate)->GetPromise().As<v8::Value>());
+  args->Return(resolver.Get(isolate)->GetPromise().As<v8::Value>());
 
-    auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
-    platform_util::MoveItemToTrash(url, callback);
+  auto callback = base::Bind(&OnMoveItemToTrashFinished, isolate, resolver);
+  platform_util::MoveItemToTrash(url, callback);
 }
 
 #if defined(OS_WIN)

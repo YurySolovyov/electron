@@ -140,19 +140,14 @@ bool MoveItemToTrashSync(const base::FilePath& full_path) {
   return XDGUtilV(argv, true);
 }
 
-void OnTrashComplete(const MoveItemToTrashCallback& callback,
-                     const bool result) {
-  // TODO: this might be redundant
-  callback.Run(result);
-}
-
 void MoveItemToTrash(const base::FilePath& full_path,
                      const MoveItemToTrashCallback& callback) {
   base::PostTaskWithTraitsAndReplyWithResult(
     FROM_HERE,
     {base::TaskPriority::USER_VISIBLE, base::MayBlock()},
-    base::BindOnce(&MoveItemToTrashSync, full_path),
-    base::BindOnce(&OnTrashComplete, callback));
+    base::Bind(&MoveItemToTrashSync, full_path), // task
+    callback                                     // reply
+  );
 }
 
 void Beep() {
