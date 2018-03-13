@@ -42,6 +42,60 @@ struct Converter<base::win::ShortcutOperation> {
 
 namespace {
 
+class MoveItemToTrashRequest {
+ public:
+  static MoveItemToTrashRequest* Create(v8::Isolate* isolate,
+                                        mate::Arguments* args,
+                                        const base::FilePath& file_path) {
+    return new MoveItemToTrashRequest(isolate, args, file_path);
+  }
+
+  MoveItemToTrashRequest(v8::Isolate* isolate,
+                         mate::Arguments* args,
+                         const base::FilePath& file_path)
+    : isolate_(isolate), args_(args), file_path_(file_path) {};
+
+  ~MoveItemToTrashRequest();
+
+  void Start() {
+    v8::Locker locker(isolate_);
+    v8::Isolate::Scope isolate_scope(isolate_);
+    v8::HandleScope handle_scope(isolate_);
+
+    resolver_.Reset(isolate_, v8::Promise::Resolver::New(isolate_));
+
+    args_->Return(resolver_.Get(isolate_)->GetPromise().As<v8::Value>());
+
+    auto callback = base::Bind(&MoveItemToTrashRequest::OnMoveItemToTrashFinished,
+                               base::Unretained(this));
+    platform_util::MoveItemToTrash(file_path_, callback);
+  }
+
+  void OnMoveItemToTrashFinished(bool result) {
+    v8::Locker locker(isolate_);
+    v8::Isolate::Scope isolate_scope(isolate_);
+    v8::HandleScope handle_scope(isolate_);
+
+    if (result) {
+      resolver_.Get(isolate_)->Resolve(v8::Null(isolate_));
+    } else {
+      printf("Rejected");
+      auto message = mate::StringToV8(isolate_, "Underlying command returned error message code");
+      resolver_.Get(isolate_)->Reject(v8::Exception::Error(message));
+    }
+
+    resolver_.Reset();
+  }
+
+  v8::Isolate* isolate_;
+  mate::Arguments* args_;
+  v8::Persistent<v8::Promise::Resolver> resolver_;
+  base::FilePath file_path_;
+
+  DISALLOW_COPY_AND_ASSIGN(MoveItemToTrashRequest);
+};
+
+
 void OnOpenExternalFinished(
     v8::Isolate* isolate,
     const base::Callback<void(v8::Local<v8::Value>)>& callback,
@@ -80,37 +134,10 @@ bool OpenExternal(
   return platform_util::OpenExternal(url, activate);
 }
 
-typedef v8::Persistent<v8::Promise::Resolver, v8::CopyablePersistentTraits<v8::Promise::Resolver>> CopyablePromiseResolver;
-void OnMoveItemToTrashFinished(v8::Isolate* isolate,
-                               CopyablePromiseResolver resolver,
-                               const bool result) {
-  v8::Locker locker(isolate);
-  v8::HandleScope handle_scope(isolate);
-
-  if (result) {
-    resolver.Get(isolate)->Resolve(v8::Null(isolate));
-  } else {
-    printf("Rejected");
-    auto message = mate::StringToV8(isolate, "Underlying command returned error message code");
-    resolver.Get(isolate)->Reject(v8::Exception::Error(message));
-  }
-
-  resolver.Reset();
-}
-
 void MoveItemToTrash(const base::FilePath& url, mate::Arguments* args) {
   v8::Isolate* isolate = args->isolate();
-
-  v8::Locker locker(isolate);
-  v8::HandleScope handle_scope(isolate);
-
-  CopyablePromiseResolver resolver;
-  resolver.Reset(isolate, v8::Promise::Resolver::New(isolate));
-
-  args->Return(resolver.Get(isolate)->GetPromise().As<v8::Value>());
-
-  auto callback = base::BindOnce(&OnMoveItemToTrashFinished, isolate, resolver);
-  platform_util::MoveItemToTrash(url, std::move(callback));
+  auto request = MoveItemToTrashRequest::Create(isolate, args, url);
+  request->Start();
 }
 
 #if defined(OS_WIN)
