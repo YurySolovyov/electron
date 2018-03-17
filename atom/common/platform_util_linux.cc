@@ -100,7 +100,7 @@ void OpenExternal(const GURL& url, bool activate,
   callback.Run(OpenExternal(url, activate) ? "" : "Failed to open");
 }
 
-bool MoveItemToTrashSync(const base::FilePath& full_path) {
+std::vector<std::string> MoveItemToTrashCommand(const base::FilePath& full_path) {
   std::string trash;
   if (getenv(ELECTRON_TRASH) != NULL) {
     trash = getenv(ELECTRON_TRASH);
@@ -137,7 +137,14 @@ bool MoveItemToTrashSync(const base::FilePath& full_path) {
     argv.push_back(ELECTRON_DEFAULT_TRASH);
     argv.push_back(full_path.value());
   }
-  return XDGUtilV(argv, true);
+  return argv;
+}
+
+bool MoveItemToTrashSync(const base::FilePath& full_path) {
+  auto command = MoveItemToTrashCommand(full_path);
+  std::string* out = new std::string;
+  // TODO: actually pass output to reject call in case of failure
+  return base::GetAppOutputAndError(command, out);
 }
 
 void MoveItemToTrash(const base::FilePath& full_path,
