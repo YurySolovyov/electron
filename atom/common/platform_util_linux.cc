@@ -24,6 +24,11 @@ namespace {
 
 bool XDGUtilV(const std::vector<std::string>& argv,
              const bool wait_for_exit) {
+  if (wait_for_exit) {
+    std::string* out = new std::string;
+    return base::GetAppOutputAndError(argv, out);
+  }
+
   base::LaunchOptions options;
   options.allow_new_privs = true;
   // xdg-open can fall back on mailcap which eventually might plumb through
@@ -36,16 +41,8 @@ bool XDGUtilV(const std::vector<std::string>& argv,
   if (!process.IsValid())
     return false;
 
-  if (!wait_for_exit) {
-    base::EnsureProcessGetsReaped(process.Pid());
-    return true;
-  }
-
-  int exit_code = -1;
-  if (!process.WaitForExit(&exit_code))
-    return false;
-
-  return (exit_code == 0);
+  base::EnsureProcessGetsReaped(process.Pid());
+  return true;
 }
 
 bool XDGUtil(const std::string& util,
